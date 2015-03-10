@@ -1,5 +1,7 @@
 package sample.project.dto;
 
+import org.springframework.hateoas.ResourceSupport;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -10,9 +12,13 @@ import javax.persistence.Id;
 @Entity
 public class Person {
 
+    public Long getRegistrationId() {
+        return registrationId;
+    }
+
     @Id
     @GeneratedValue
-    private Long id;
+    private Long registrationId;
     private String lastName;
     private String firstName;
 
@@ -21,10 +27,6 @@ public class Person {
     public Person(String firstName, String lastName){
         this.firstName = firstName;
         this.lastName = lastName;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getLastName() {

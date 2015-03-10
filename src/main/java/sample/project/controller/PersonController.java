@@ -1,12 +1,17 @@
 package sample.project.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import sample.project.data.RegistrationRequest;
+import sample.project.data.RegistrationResponse;
 import sample.project.dto.Person;
 import sample.project.dto.PersonRepository;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import javax.validation.Valid;
 
 /**
  * Created by Adrian Work on 7/28/2014.
@@ -27,25 +32,32 @@ public class PersonController {
         return personRepository.findAll();
     }
 
-    @RequestMapping("/find/{id}")
-    public Person findById(@PathVariable Long id) {
-        return personRepository.findOne(id);
+    @RequestMapping(value = "/find/{id}",method = RequestMethod.GET)
+    public HttpEntity<RegistrationResponse> findById(@PathVariable Long id) {
+
+        Person person = personRepository.findOne(id);
+        RegistrationResponse response = new RegistrationResponse();
+        response.setResult("SUCCESS");
+        response.setRegistrationId(Long.toString(id));
+        response.add(linkTo(methodOn(PersonController.class).findById(person.getRegistrationId())).withSelfRel());
+
+        return new ResponseEntity(response,HttpStatus.OK);
     }
 
-    @RequestMapping("/find/firstName/{firstName}")
-    public Iterable<Person> findByFirstName(@PathVariable String firstName) {
-        return personRepository.findByFirstName(firstName);
-    }
 
-    @RequestMapping("/find/lastName/{lastName}")
-    public Iterable<Person> findByLastName(@PathVariable String lastName) {
-        return personRepository.findByFirstName(lastName);
-    }
+    @RequestMapping(value = "/add", method = RequestMethod.POST)
+     public HttpEntity<RegistrationResponse> addPerson(@Valid @RequestBody RegistrationRequest request) {
 
-    @RequestMapping("/add/{firstName}/{lastName}")
-    public Person addPerson(@PathVariable String firstName, @PathVariable String lastName) {
-        Person person = new Person(firstName, lastName);
-        return personRepository.save(person);
+        Person person = new Person(request.getFirstName(),request.getLastName());
+        Person saved = personRepository.save(person);
+
+        RegistrationResponse response = new RegistrationResponse();
+        response.setRegistrationId(Long.toString(saved.getRegistrationId()));
+        response.setResult("SUCCESS");
+
+        response.add(linkTo(methodOn(PersonController.class).findById(saved.getRegistrationId())).withSelfRel());
+
+        return new ResponseEntity(response,HttpStatus.OK);
     }
 
     @RequestMapping("/delete/{id}")
